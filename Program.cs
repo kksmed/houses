@@ -1,5 +1,14 @@
 ﻿var complex = new Complex();
 
+for(var x = 0; x < Complex.Size; x++)
+{
+  for(var y = 0; y < Complex.Size; y++)
+  {
+    if (HouseAllowed(x, y))
+      complex.Plots[x, y] = true;
+  }
+}
+
 PrintComplex(complex);
 Console.ReadKey();
 return;
@@ -48,4 +57,3 @@ record Complex
   public const int Size = 8;
   public bool[,] Plots { get; } = new bool[Size, Size];
 }
-
