@@ -1,20 +1,57 @@
-﻿var complex = new Complex();
+﻿var (best, solution) = Solve(0, 0, new());
 
-for(var x = 0; x < Complex.Size; x++)
-{
-  for(var y = 0; y < Complex.Size; y++)
-  {
-    if (HouseAllowed(x, y))
-      complex.Plots[x, y] = true;
-  }
-}
+PrintComplex(solution);
 
-PrintComplex();
+Console.WriteLine();
+Console.WriteLine($"With: {best} houses");
 
 Console.WriteLine();
 Console.WriteLine("<Press any key to exit>");
 Console.ReadKey();
 return;
+
+(int Houses, Complex Complex) Solve(int x, int y, Complex complex)
+{
+  Console.WriteLine($"Try solving ({x}, {y})");
+  PrintComplex(complex);
+  Console.ReadKey(); 
+
+  var next = FindNext();
+  if (!HouseAllowed(x, y, complex))
+    return next == null ? (CountHouses(complex), complex) : Solve(next.Value.X, next.Value.Y, complex);
+
+  var complexWithHouse = complex.Copy();
+  complexWithHouse.Plots[x, y] = true;
+  if (next == null)
+    return (CountHouses(complex), complexWithHouse);
+
+  var solutionWithout = Solve(next.Value.X, next.Value.Y, complex);
+  var solutionWith = Solve(next.Value.X, next.Value.Y, complexWithHouse);
+  return solutionWithout.Houses > solutionWith.Houses
+    ? solutionWithout
+    : solutionWith;
+
+  (int X, int Y)? FindNext() =>
+    (x, y) switch
+      {
+        (Complex.Size - 1, Complex.Size - 1) => null,
+        (Complex.Size - 1, _) => (0, y + 1),
+        _ => (x + 1, y)
+      };
+}
+
+int CountHouses(Complex complex){
+  var count = 0;
+  for(var x = 0; x < Complex.Size; x++)
+  {
+    for(var y = 0; y < Complex.Size; y++)
+    {
+      if (complex.Plots[x, y])
+        count++;
+    }
+  }
+  return count;
+}
 
 IEnumerable<(int X, int Y)> FindNeighbours(int x, int y)
 {
@@ -40,7 +77,7 @@ IEnumerable<(int X, int Y)> FindNeighbours(int x, int y)
   }
 }
 
-int ParkSurplus(int x, int y)
+int ParkSurplus(int x, int y, Complex complex)
 {
   var neighbourHouses = 0;
   var neighbourParks = 0;
@@ -55,13 +92,13 @@ int ParkSurplus(int x, int y)
   return neighbourParks - neighbourHouses;
 }
 
-bool HouseAllowed(int x, int y) =>
-  ParkSurplus(x, y) > 0
+bool HouseAllowed(int x, int y, Complex complex) =>
+  ParkSurplus(x, y, complex) > 0
   && FindNeighbours(x, y)
     .Where(n => complex.Plots[n.X, n.Y])
-    .All(n => ParkSurplus(n.X, n.Y) >= 2);
+    .All(n => ParkSurplus(n.X, n.Y, complex) >= 2);
 
-void PrintComplex()
+void PrintComplex(Complex complex)
 {
   for (var x = 0; x < Complex.Size; x++)
   {
@@ -77,4 +114,17 @@ record Complex
 {
   public const int Size = 8;
   public bool[,] Plots { get; } = new bool[Size, Size];
+
+  public Complex Copy()
+  {
+    var clone = new Complex();
+    for (var x = 0; x < Size; x++)
+    {
+      for (var y = 0; y < Size; y++)
+      {
+        clone.Plots[x, y] = Plots[x, y];
+      }
+    }
+    return clone;
+  }
 }
