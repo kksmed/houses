@@ -13,32 +13,46 @@ PrintComplex(complex);
 Console.ReadKey();
 return;
 
-bool HouseAllowed(int x, int y)
+IEnumerable<(int X, int Y)> FindNeighbours(int x, int y)
+{
+  // X - 1
+  if (x - 1 >= 0)
+    foreach (var neighbour in TestRow(x - 1))
+      yield return neighbour;
+
+  // X
+  foreach (var neighbour in TestRow(x)) yield return neighbour;
+
+  // X +1
+  if (x + 1 < Complex.Size)
+    foreach (var neighbour in TestRow(x + 1))
+      yield return neighbour;
+  yield break;
+
+  IEnumerable<(int X, int Y)> TestRow(int xToTest)
+  {
+    if (y - 1 >= 0) yield return (xToTest, y - 1);
+    if (xToTest != x) yield return (xToTest, y);
+    if (y + 1 < Complex.Size) yield return (xToTest, y + 1);
+  }
+}
+
+int ParkSurplus(int x, int y)
 {
   var neighbourHouses = 0;
   var neighbourParks = 0;
 
-  if (x - 1 >= 0) TestRow(x - 1);
-  TestRow(x);
-  if (x +1 < Complex.Size) TestRow(x + 1);
-
-  return neighbourHouses <= neighbourParks;
-
-  void TestRow(int xToTest)
+  foreach (var neighbour in FindNeighbours(x, y))
   {
-    if (y - 1 >= 0) TestNeighbour(xToTest, y - 1);
-    if (xToTest != x) TestNeighbour(xToTest, y);
-    if (y + 1 < Complex.Size) TestNeighbour(xToTest, y + 1);
-  }
-
-  void TestNeighbour(int xToTest, int yToTest)
-  {
-    if (complex.Plots[xToTest, yToTest])
+    if (complex.Plots[neighbour.X, neighbour.Y])
       neighbourHouses++;
     else
       neighbourParks++;
   }
+  return neighbourParks - neighbourHouses;
 }
+
+bool HouseAllowed(int x, int y) => ParkSurplus(x, y) > 0 && FindNeighbours(x, y).All(n => ParkSurplus(n.X, n.Y) >= 1);
 
 void PrintComplex(Complex complex1)
 {
