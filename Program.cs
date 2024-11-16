@@ -9,7 +9,7 @@ for(var x = 0; x < Complex.Size; x++)
   }
 }
 
-PrintComplex(complex);
+PrintComplex();
 
 Console.WriteLine();
 Console.WriteLine("<Press any key to exit>");
@@ -55,15 +55,19 @@ int ParkSurplus(int x, int y)
   return neighbourParks - neighbourHouses;
 }
 
-bool HouseAllowed(int x, int y) => ParkSurplus(x, y) > 0 && FindNeighbours(x, y).All(n => ParkSurplus(n.X, n.Y) >= 2 );
+bool HouseAllowed(int x, int y) =>
+  ParkSurplus(x, y) > 0
+  && FindNeighbours(x, y)
+    .Where(n => complex.Plots[n.X, n.Y])
+    .All(n => ParkSurplus(n.X, n.Y) >= 2);
 
-void PrintComplex(Complex complex1)
+void PrintComplex()
 {
   for (var x = 0; x < Complex.Size; x++)
   {
     for (var y = 0; y < Complex.Size; y++)
     {
-      Console.Write(complex1.Plots[x, y] ? "X" : "O");
+      Console.Write(complex.Plots[x, y] ? "X" : "O");
     }
     Console.WriteLine();
   }
