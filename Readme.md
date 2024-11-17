@@ -1,10 +1,8 @@
-# Juleopgave 2024
+# Boligkomplekset
 
 ![Opgave tekst](opgave.jpg)
 
-## Boligkomplekset
-
-En bygherre ønsker at bygge et boligkompls på et kvadratisk omrøde med **64 indivduelle grunde (8x8)**, med maksimalt ét hus pr. grund. Lokale byplanregler tillader kun, at der bygges et hus på en grund, hvis mindst halvdelen af de tilstødende grunde - inde for komplekset - er bestemt til at blive brugt som parker.
+En bygherre ønsker at bygge et boligkompleks på et kvadratisk omrøde med **64 individuelle grunde (8x8)**, med maksimalt ét hus pr. grund. Lokale byplanregler tillader kun, at der bygges et hus på en grund, hvis mindst halvdelen af de tilstødende grunde - inde for komplekset - er bestemt til at blive brugt som parker.
 
 **Hvad er det maksimale antal huse, som bygherren kan bygge på de 64 grunde og stadig overholde de lokale regler?**
 
