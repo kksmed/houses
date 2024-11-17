@@ -1,9 +1,11 @@
-﻿var (best, solution) = Solve(0, 0, new());
+﻿var counter = 0;
+var cache = new Dictionary<Boarder, (int Best, Complex solution)>();
+var (mostHouses, bestSolution) = Solve(0, 0, new());
 
-PrintComplex(solution);
+PrintComplex(bestSolution);
 
 Console.WriteLine();
-Console.WriteLine($"With: {best} houses");
+Console.WriteLine($"With: {mostHouses} houses");
 
 Console.WriteLine();
 Console.WriteLine("<Press any key to exit>");
@@ -12,20 +14,38 @@ return;
 
 (int Houses, Complex Complex) Solve(int x, int y, Complex complex)
 {
+  var boarder = new Boarder(x, y, FindBoarder(x, y, complex).ToList());
+  if (cache.TryGetValue(boarder, out var cached))
+    return cached;
+
   var next = FindNext();
   if (!HouseAllowed(x, y, complex))
-    return next == null ? (CountHouses(complex), complex) : Solve(next.Value.X, next.Value.Y, complex);
+  {
+    var (houses, solution) = next == null ? (CountHouses(complex), complex) : Solve(next.Value.X, next.Value.Y, complex);
+    CacheSolution(houses, solution);
+    return (houses, solution);
+  }
 
   var complexWithHouse = complex.Copy();
   complexWithHouse.Plots[x, y] = true;
   if (next == null)
-    return (CountHouses(complex), complexWithHouse);
+  {
+    var houses = CountHouses(complexWithHouse);
+    CacheSolution(houses, complexWithHouse);
+    return (houses, complexWithHouse);
+  }
 
   var solutionWith = Solve(next.Value.X, next.Value.Y, complexWithHouse);
   var solutionWithout = Solve(next.Value.X, next.Value.Y, complex);
-  return solutionWithout.Houses > solutionWith.Houses
-    ? solutionWithout
-    : solutionWith;
+
+  if (solutionWithout.Houses > solutionWith.Houses)
+  {
+    CacheSolution(solutionWithout.Houses, solutionWithout.Complex);
+    return solutionWithout;
+  }
+
+  CacheSolution(solutionWith.Houses, solutionWith.Complex);
+  return solutionWith;
 
   (int X, int Y)? FindNext() =>
     (x, y) switch
@@ -34,6 +54,11 @@ return;
         (Complex.Size - 1, _) => (0, y + 1),
         _ => (x + 1, y)
       };
+
+  void CacheSolution(int houses, Complex solutionToCache)
+  {
+    cache[boarder] = (houses, solutionToCache);
+  }
 }
 
 int CountHouses(Complex complex){
@@ -47,6 +72,22 @@ int CountHouses(Complex complex){
     }
   }
   return count;
+}
+
+IEnumerable<bool> FindBoarder(int x, int y, Complex complex)
+{
+  var boarderY = x > 0 ? y : y - 1;
+  if (boarderY < 0) yield break;
+  for (var boarderX = 0; x < Complex.Size; x++)
+  {
+    yield return complex.Plots[boarderX, boarderY];
+    if (boarderX == x - 1)
+    {
+      boarderY--;
+      if (boarderY < 0) yield break;
+      yield return complex.Plots[boarderX, boarderY];
+    }
+  }
 }
 
 IEnumerable<(int X, int Y)> FindNeighbours(int x, int y)
@@ -75,6 +116,12 @@ IEnumerable<(int X, int Y)> FindNeighbours(int x, int y)
 
 int ParkSurplus(int x, int y, Complex complex)
 {
+  counter++;
+  if (counter % 10_000_000 == 0)
+  {
+    Console.WriteLine($"Solving ({x}, {y}) - {counter:g2}");
+    PrintComplex(complex);
+  }
   var neighbourHouses = 0;
   var neighbourParks = 0;
 
@@ -120,4 +167,20 @@ record Complex
   }
 
   public Complex Copy() => new((bool[,])Plots.Clone());
+}
+
+record Boarder(int X, int Y, List<bool> Plots)
+{
+  public virtual bool Equals(Boarder? other)
+  {
+    if (other is null) return false;
+    if (ReferenceEquals(this, other)) return true;
+    return X == other.X && Y == other.Y && Plots.SequenceEqual(other.Plots);
+  }
+
+  public override int GetHashCode()
+  {
+    // Don't bother to include Plots in the hash code
+    return HashCode.Combine(X, Y);
+  }
 }
