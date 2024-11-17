@@ -1,12 +1,18 @@
-﻿var counter = 0;
+﻿using System.Diagnostics;
+
+var counter = 0;
 var cache = new Dictionary<Boarder, (int Best, Complex solution)>();
+var sw = Stopwatch.StartNew();
 var (mostHouses, bestSolution) = Solve(0, 0, new());
 
+sw.Stop();
 PrintComplex(bestSolution);
 
 Console.WriteLine();
 Console.WriteLine($"With: {mostHouses} houses");
 
+Console.WriteLine();
+Console.WriteLine($"In: {sw.Elapsed}");
 Console.WriteLine();
 Console.WriteLine("<Press any key to exit>");
 Console.ReadKey();
