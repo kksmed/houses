@@ -1,8 +1,8 @@
 using System.Drawing;
 
-record Boarder(Point Point, List<bool> Plots)
+record Scenario(Point Point, List<bool> Plots)
 {
-  public virtual bool Equals(Boarder? other)
+  public virtual bool Equals(Scenario? other)
   {
     if (other is null) return false;
     if (ReferenceEquals(this, other)) return true;

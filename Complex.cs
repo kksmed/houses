@@ -3,7 +3,7 @@ using System.Drawing;
 record Complex
 {
   public const int Size = 8;
-  public bool[,] Plots { get; }
+  bool[,] Plots { get; }
 
   public Complex() : this(new bool[Size, Size])
   { }
