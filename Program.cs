@@ -21,7 +21,8 @@ return;
   var next = FindNext();
   if (!HouseAllowed(x, y, complex))
   {
-    var (houses, solution) = next == null ? (CountHouses(complex), complex) : Solve(next.Value.X, next.Value.Y, complex);
+    var (houses, solution) =
+      next == null ? (complex.CountHouses(), complex) : Solve(next.Value.X, next.Value.Y, complex);
     CacheSolution(houses, solution);
     return (houses, solution);
   }
@@ -30,7 +31,7 @@ return;
   complexWithHouse.Plots[x, y] = true;
   if (next == null)
   {
-    var houses = CountHouses(complexWithHouse);
+    var houses = complexWithHouse.CountHouses();
     CacheSolution(houses, complexWithHouse);
     return (houses, complexWithHouse);
   }
@@ -61,24 +62,11 @@ return;
   }
 }
 
-int CountHouses(Complex complex){
-  var count = 0;
-  for(var x = 0; x < Complex.Size; x++)
-  {
-    for(var y = 0; y < Complex.Size; y++)
-    {
-      if (complex.Plots[x, y])
-        count++;
-    }
-  }
-  return count;
-}
-
 IEnumerable<bool> FindBoarder(int x, int y, Complex complex)
 {
   var boarderY = x > 0 ? y : y - 1;
   if (boarderY < 0) yield break;
-  for (var boarderX = 0; x < Complex.Size; x++)
+  for (var boarderX = 0; boarderX < Complex.Size; boarderX++)
   {
     yield return complex.Plots[boarderX, boarderY];
     if (boarderX == x - 1)
@@ -150,37 +138,5 @@ void PrintComplex(Complex complex)
       Console.Write(complex.Plots[x, y] ? "X" : "O");
     }
     Console.WriteLine();
-  }
-}
-
-record Complex
-{
-  public const int Size = 8;
-  public bool[,] Plots { get; }
-
-  public Complex() : this(new bool[Size, Size])
-  { }
-
-  Complex(bool[,] initialPlots)
-  {
-    Plots = initialPlots;
-  }
-
-  public Complex Copy() => new((bool[,])Plots.Clone());
-}
-
-record Boarder(int X, int Y, List<bool> Plots)
-{
-  public virtual bool Equals(Boarder? other)
-  {
-    if (other is null) return false;
-    if (ReferenceEquals(this, other)) return true;
-    return X == other.X && Y == other.Y && Plots.SequenceEqual(other.Plots);
-  }
-
-  public override int GetHashCode()
-  {
-    // Don't bother to include Plots in the hash code
-    return HashCode.Combine(X, Y);
   }
 }
