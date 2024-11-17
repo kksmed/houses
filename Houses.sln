@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JuleOpgave2024", "JuleOpgave2024.csproj", "{AD2CEADA-F747-40CE-8B00-AAD72D6028F9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Houses", "Houses.csproj", "{AD2CEADA-F747-40CE-8B00-AAD72D6028F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
