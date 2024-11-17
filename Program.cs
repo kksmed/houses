@@ -12,10 +12,6 @@ return;
 
 (int Houses, Complex Complex) Solve(int x, int y, Complex complex)
 {
-  Console.WriteLine($"Try solving ({x}, {y})");
-  PrintComplex(complex);
-  Console.ReadKey(); 
-
   var next = FindNext();
   if (!HouseAllowed(x, y, complex))
     return next == null ? (CountHouses(complex), complex) : Solve(next.Value.X, next.Value.Y, complex);
@@ -25,8 +21,8 @@ return;
   if (next == null)
     return (CountHouses(complex), complexWithHouse);
 
-  var solutionWithout = Solve(next.Value.X, next.Value.Y, complex);
   var solutionWith = Solve(next.Value.X, next.Value.Y, complexWithHouse);
+  var solutionWithout = Solve(next.Value.X, next.Value.Y, complex);
   return solutionWithout.Houses > solutionWith.Houses
     ? solutionWithout
     : solutionWith;
@@ -100,9 +96,9 @@ bool HouseAllowed(int x, int y, Complex complex) =>
 
 void PrintComplex(Complex complex)
 {
-  for (var x = 0; x < Complex.Size; x++)
+  for (var y = 0; y < Complex.Size; y++)
   {
-    for (var y = 0; y < Complex.Size; y++)
+    for (var x = 0; x < Complex.Size; x++)
     {
       Console.Write(complex.Plots[x, y] ? "X" : "O");
     }
@@ -113,18 +109,15 @@ void PrintComplex(Complex complex)
 record Complex
 {
   public const int Size = 8;
-  public bool[,] Plots { get; } = new bool[Size, Size];
+  public bool[,] Plots { get; }
 
-  public Complex Copy()
+  public Complex() : this(new bool[Size, Size])
+  { }
+
+  Complex(bool[,] initialPlots)
   {
-    var clone = new Complex();
-    for (var x = 0; x < Size; x++)
-    {
-      for (var y = 0; y < Size; y++)
-      {
-        clone.Plots[x, y] = Plots[x, y];
-      }
-    }
-    return clone;
+    Plots = initialPlots;
   }
+
+  public Complex Copy() => new((bool[,])Plots.Clone());
 }
