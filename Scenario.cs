@@ -1,12 +1,12 @@
 using System.Drawing;
 
-record Scenario(Point Point, List<bool> Plots)
+record Scenario(Point Point, List<bool> EdgePlots)
 {
   public virtual bool Equals(Scenario? other)
   {
     if (other is null) return false;
     if (ReferenceEquals(this, other)) return true;
-    return Point == other.Point && Plots.SequenceEqual(other.Plots);
+    return Point == other.Point && EdgePlots.SequenceEqual(other.EdgePlots);
   }
 
   public override int GetHashCode()
