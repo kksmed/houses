@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
+using System.Drawing;
 
-var counter = 0;
 var cache = new Dictionary<Boarder, (int Best, Complex solution)>();
 var sw = Stopwatch.StartNew();
-var (mostHouses, bestSolution) = Solve(0, 0, new());
+var (mostHouses, bestSolution) = Solve(new(0,0), new());
 
 sw.Stop();
 PrintComplex(bestSolution);
@@ -18,32 +18,31 @@ Console.WriteLine("<Press any key to exit>");
 Console.ReadKey();
 return;
 
-(int Houses, Complex Complex) Solve(int x, int y, Complex complex)
+(int Houses, Complex Complex) Solve(Point point, Complex complex)
 {
-  var boarder = new Boarder(x, y, FindBoarder(x, y, complex).ToList());
+  var boarder = new Boarder(point, FindBoarder(point, complex).ToList());
   if (cache.TryGetValue(boarder, out var cached))
     return cached;
 
   var next = FindNext();
-  if (!HouseAllowed(x, y, complex))
+  if (!HouseAllowed(point, complex))
   {
-    var (houses, solution) =
-      next == null ? (complex.CountHouses(), complex) : Solve(next.Value.X, next.Value.Y, complex);
+    var (houses, solution) = next.HasValue ? Solve(next.Value, complex) : (complex.CountHouses(), complex);
     CacheSolution(houses, solution);
     return (houses, solution);
   }
 
   var complexWithHouse = complex.Copy();
-  complexWithHouse.Plots[x, y] = true;
-  if (next == null)
+  complexWithHouse.SetHouse(point);
+  if (!next.HasValue)
   {
     var houses = complexWithHouse.CountHouses();
     CacheSolution(houses, complexWithHouse);
     return (houses, complexWithHouse);
   }
 
-  var solutionWith = Solve(next.Value.X, next.Value.Y, complexWithHouse);
-  var solutionWithout = Solve(next.Value.X, next.Value.Y, complex);
+  var solutionWith = Solve(next.Value, complexWithHouse);
+  var solutionWithout = Solve(next.Value, complex);
 
   if (solutionWithout.Houses > solutionWith.Houses)
   {
@@ -54,13 +53,12 @@ return;
   CacheSolution(solutionWith.Houses, solutionWith.Complex);
   return solutionWith;
 
-  (int X, int Y)? FindNext() =>
-    (x, y) switch
-      {
-        (Complex.Size - 1, Complex.Size - 1) => null,
-        (Complex.Size - 1, _) => (0, y + 1),
-        _ => (x + 1, y)
-      };
+  Point? FindNext() => point switch
+    {
+      { X: Complex.Size - 1, Y: Complex.Size - 1 } => null,
+      { X: Complex.Size - 1 } => new(0, point.Y + 1),
+      _ => point with { X = point.X + 1 }
+    };
 
   void CacheSolution(int houses, Complex solutionToCache)
   {
@@ -68,14 +66,14 @@ return;
   }
 }
 
-IEnumerable<bool> FindBoarder(int x, int y, Complex complex)
+IEnumerable<bool> FindBoarder(Point point, Complex complex)
 {
-  var boarderY = x > 0 ? y : y - 1;
+  var boarderY = point.X > 0 ? point.Y : point.Y - 1;
   if (boarderY < 0) yield break;
   for (var boarderX = 0; boarderX < Complex.Size; boarderX++)
   {
     yield return complex.Plots[boarderX, boarderY];
-    if (boarderX == x - 1)
+    if (boarderX == point.X - 1)
     {
       boarderY--;
       if (boarderY < 0) yield break;
@@ -84,42 +82,36 @@ IEnumerable<bool> FindBoarder(int x, int y, Complex complex)
   }
 }
 
-IEnumerable<(int X, int Y)> FindNeighbours(int x, int y)
+IEnumerable<Point> FindNeighbours(Point point)
 {
   // X - 1
-  if (x - 1 >= 0)
-    foreach (var neighbour in TestRow(x - 1))
+  if (point.X - 1 >= 0)
+    foreach (var neighbour in TestRow(point.X - 1))
       yield return neighbour;
 
   // X
-  foreach (var neighbour in TestRow(x)) yield return neighbour;
+  foreach (var neighbour in TestRow(point.X)) yield return neighbour;
 
-  // X +1
-  if (x + 1 < Complex.Size)
-    foreach (var neighbour in TestRow(x + 1))
+  // X + 1
+  if (point.X + 1 < Complex.Size)
+    foreach (var neighbour in TestRow(point.X + 1))
       yield return neighbour;
   yield break;
 
-  IEnumerable<(int X, int Y)> TestRow(int xToTest)
+  IEnumerable<Point> TestRow(int xToTest)
   {
-    if (y - 1 >= 0) yield return (xToTest, y - 1);
-    if (xToTest != x) yield return (xToTest, y);
-    if (y + 1 < Complex.Size) yield return (xToTest, y + 1);
+    if (point.Y - 1 >= 0) yield return new(xToTest, point.Y - 1);
+    if (xToTest != point.X) yield return point with { X = xToTest };
+    if (point.Y + 1 < Complex.Size) yield return new(xToTest, point.Y + 1);
   }
 }
 
-int ParkSurplus(int x, int y, Complex complex)
+int ParkSurplus(Point point, Complex complex)
 {
-  counter++;
-  if (counter % 10_000_000 == 0)
-  {
-    Console.WriteLine($"Solving ({x}, {y}) - {counter:g2}");
-    PrintComplex(complex);
-  }
   var neighbourHouses = 0;
   var neighbourParks = 0;
 
-  foreach (var neighbour in FindNeighbours(x, y))
+  foreach (var neighbour in FindNeighbours(point))
   {
     if (complex.Plots[neighbour.X, neighbour.Y])
       neighbourHouses++;
@@ -129,11 +121,11 @@ int ParkSurplus(int x, int y, Complex complex)
   return neighbourParks - neighbourHouses;
 }
 
-bool HouseAllowed(int x, int y, Complex complex) =>
-  ParkSurplus(x, y, complex) > 0
-  && FindNeighbours(x, y)
-    .Where(n => complex.Plots[n.X, n.Y])
-    .All(n => ParkSurplus(n.X, n.Y, complex) >= 2);
+bool HouseAllowed(Point point, Complex complex) =>
+  ParkSurplus(point, complex) > 0
+  && FindNeighbours(point)
+    .Where(complex.HasHouse)
+    .All(n => ParkSurplus(n, complex) >= 2);
 
 void PrintComplex(Complex complex)
 {
